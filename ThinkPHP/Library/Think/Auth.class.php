@@ -236,7 +236,7 @@ class Auth
     {
         static $userinfo = array();
         if (!isset($userinfo[$uid])) {
-            $userinfo[$uid] = M()->where(array('uid' => $uid))->table($this->_config['AUTH_USER'])->find();
+            $userinfo[$uid] = M()->where(array('id' => $uid))->table($this->_config['AUTH_USER'])->find();
         }
         return $userinfo[$uid];
     }
