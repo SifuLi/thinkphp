@@ -305,7 +305,7 @@ class Gd
                 $newh = $h * $scale;
                 $posx = ($width - $w * $scale) / 2;
                 $posy = ($height - $h * $scale) / 2;
-
+                $x = $y =0; // Add @2016-3-8 by lisifu
                 do {
                     //创建新图像
                     $img = imagecreatetruecolor($width, $height);
