@@ -287,7 +287,7 @@ class Lite
      */
     public function rollback()
     {
-        if ($this->transTimes > 0) {
+        if ($this->transTimes == 1) {
             $result = $this->_linkID->rollback();
             $this->transTimes = 0;
             $this->transPdo = null;
@@ -295,6 +295,8 @@ class Lite
                 $this->error();
                 return false;
             }
+        }else {
+            $this->transTimes = $this->transTimes <= 0 ? 0 : $this->transTimes - 1;
         }
         return true;
     }

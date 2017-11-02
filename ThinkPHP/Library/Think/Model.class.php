@@ -1673,7 +1673,7 @@ class Model
      */
     public function startTrans()
     {
-        $this->commit();
+        //$this->commit();  // 去掉以支持事务嵌套
         $this->db->startTrans();
         return;
     }
