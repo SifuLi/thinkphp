@@ -41,7 +41,7 @@ class File extends Cache
     /**
      * 初始化检查
      * @access private
-     * @return boolean
+     * @return void
      */
     private function init()
     {
@@ -167,13 +167,13 @@ class File extends Cache
      */
     public function rm($name)
     {
-        return unlink($this->filename($name));
+        $file = $this->filename($name);
+        return is_file($file) ? unlink($file) : true;
     }
 
     /**
      * 清除缓存
      * @access public
-     * @param string $name 缓存变量名
      * @return boolean
      */
     public function clear()
