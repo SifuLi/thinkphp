@@ -51,7 +51,9 @@ class Image
 
     /**
      * 构造方法，用于实例化一个图片处理对象
-     * @param string $type 要使用的类库，默认使用GD库
+     * @param int $type 要使用的类库，默认使用GD库
+     * @param null $imgname
+     * @throws Exception
      */
     public function __construct($type = self::IMAGE_GD, $imgname = null)
     {
@@ -75,7 +77,7 @@ class Image
     /**
      * 打开一幅图像
      * @param  string $imgname 图片路径
-     * @return Object          当前图片处理库对象
+     * @return Image          当前图片处理库对象
      */
     public function open($imgname)
     {
@@ -89,7 +91,7 @@ class Image
      * @param  string  $type      图片类型
      * @param  integer $quality   图像质量
      * @param  boolean $interlace 是否对JPEG类型图片设置隔行扫描
-     * @return Object             当前图片处理库对象
+     * @return Image             当前图片处理库对象
      */
     public function save($imgname, $type = null, $quality = 80, $interlace = true)
     {
@@ -144,13 +146,13 @@ class Image
 
     /**
      * 裁剪图片
-     * @param  integer $w      裁剪区域宽度
-     * @param  integer $h      裁剪区域高度
-     * @param  integer $x      裁剪区域x坐标
-     * @param  integer $y      裁剪区域y坐标
-     * @param  integer $width  图片保存宽度
+     * @param  integer $w 裁剪区域宽度
+     * @param  integer $h 裁剪区域高度
+     * @param  integer $x 裁剪区域x坐标
+     * @param  integer $y 裁剪区域y坐标
+     * @param  integer $width 图片保存宽度
      * @param  integer $height 图片保存高度
-     * @return Object          当前图片处理库对象
+     * @return Image 当前图片处理库对象
      */
     public function crop($w, $h, $x = 0, $y = 0, $width = null, $height = null)
     {
@@ -163,7 +165,7 @@ class Image
      * @param  integer $width  缩略图最大宽度
      * @param  integer $height 缩略图最大高度
      * @param  integer $type   缩略图裁剪类型
-     * @return Object          当前图片处理库对象
+     * @return Image          当前图片处理库对象
      */
     public function thumb($width, $height, $type = self::IMAGE_THUMB_SCALE)
     {
@@ -176,7 +178,7 @@ class Image
      * @param  string  $source 水印图片路径
      * @param  integer $locate 水印位置
      * @param  integer $alpha  水印透明度
-     * @return Object          当前图片处理库对象
+     * @return Image          当前图片处理库对象
      */
     public function water($source, $locate = self::IMAGE_WATER_SOUTHEAST, $alpha = 80)
     {
@@ -193,7 +195,7 @@ class Image
      * @param  integer $locate 文字写入位置
      * @param  integer $offset 文字相对当前位置的偏移量
      * @param  integer $angle  文字倾斜角度
-     * @return Object          当前图片处理库对象
+     * @return Image          当前图片处理库对象
      */
     public function text($text, $font, $size, $color = '#00000000',
         $locate = self::IMAGE_WATER_SOUTHEAST, $offset = 0, $angle = 0) {

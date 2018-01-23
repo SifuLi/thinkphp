@@ -31,6 +31,7 @@ class Gd
     /**
      * 构造方法，可用于打开一张图像
      * @param string $imgname 图像路径
+     * @throws \Think\Exception
      */
     public function __construct($imgname = null)
     {
@@ -40,6 +41,7 @@ class Gd
     /**
      * 打开一张图像
      * @param  string $imgname 图像路径
+     * @throws \Think\Exception
      */
     public function open($imgname)
     {
@@ -81,10 +83,11 @@ class Gd
 
     /**
      * 保存图像
-     * @param  string  $imgname   图像保存名称
-     * @param  string  $type      图像类型
-     * @param  integer $quality   图像质量
+     * @param  string $imgname 图像保存名称
+     * @param  string $type 图像类型
+     * @param  integer $quality 图像质量
      * @param  boolean $interlace 是否对JPEG类型图像设置隔行扫描
+     * @throws \Think\Exception
      */
     public function save($imgname, $type = null, $quality = 80, $interlace = true)
     {
@@ -119,6 +122,7 @@ class Gd
     /**
      * 返回图像宽度
      * @return integer 图像宽度
+     * @throws \Think\Exception
      */
     public function width()
     {
@@ -132,6 +136,7 @@ class Gd
     /**
      * 返回图像高度
      * @return integer 图像高度
+     * @throws \Think\Exception
      */
     public function height()
     {
@@ -145,6 +150,7 @@ class Gd
     /**
      * 返回图像类型
      * @return string 图像类型
+     * @throws \Think\Exception
      */
     public function type()
     {
@@ -158,6 +164,7 @@ class Gd
     /**
      * 返回图像MIME类型
      * @return string 图像MIME类型
+     * @throws \Think\Exception
      */
     public function mime()
     {
@@ -171,6 +178,7 @@ class Gd
     /**
      * 返回图像尺寸数组 0 - 图像宽度，1 - 图像高度
      * @return array 图像尺寸
+     * @throws \Think\Exception
      */
     public function size()
     {
@@ -183,12 +191,13 @@ class Gd
 
     /**
      * 裁剪图像
-     * @param  integer $w      裁剪区域宽度
-     * @param  integer $h      裁剪区域高度
-     * @param  integer $x      裁剪区域x坐标
-     * @param  integer $y      裁剪区域y坐标
-     * @param  integer $width  图像保存宽度
+     * @param  integer $w 裁剪区域宽度
+     * @param  integer $h 裁剪区域高度
+     * @param  integer $x 裁剪区域x坐标
+     * @param  integer $y 裁剪区域y坐标
+     * @param  integer $width 图像保存宽度
      * @param  integer $height 图像保存高度
+     * @throws \Think\Exception
      */
     public function crop($w, $h, $x = 0, $y = 0, $width = null, $height = null)
     {
@@ -224,9 +233,10 @@ class Gd
 
     /**
      * 生成缩略图
-     * @param  integer $width  缩略图最大宽度
+     * @param  integer $width 缩略图最大宽度
      * @param  integer $height 缩略图最大高度
-     * @param  integer $type   缩略图裁剪类型
+     * @param  integer $type 缩略图裁剪类型
+     * @throws \Think\Exception
      */
     public function thumb($width, $height, $type = Image::IMAGE_THUMB_SCALE)
     {
@@ -237,6 +247,9 @@ class Gd
         //原图宽度和高度
         $w = $this->info['width'];
         $h = $this->info['height'];
+
+        //设置缩略图的默认坐标
+        $x = $y = 0;
 
         /* 计算缩略图生成的必要参数 */
         switch ($type) {
@@ -305,7 +318,6 @@ class Gd
                 $newh = $h * $scale;
                 $posx = ($width - $w * $scale) / 2;
                 $posy = ($height - $h * $scale) / 2;
-                $x = $y =0; // Add @2016-3-8 by lisifu
                 do {
                     //创建新图像
                     $img = imagecreatetruecolor($width, $height);
@@ -338,9 +350,10 @@ class Gd
 
     /**
      * 添加水印
-     * @param  string  $source 水印图片路径
+     * @param  string $source 水印图片路径
      * @param  integer $locate 水印位置
-     * @param  integer $alpha  水印透明度
+     * @param  integer $alpha 水印透明度
+     * @throws \Think\Exception
      */
     public function water($source, $locate = Image::IMAGE_WATER_SOUTHEAST, $alpha = 80)
     {
@@ -366,6 +379,8 @@ class Gd
         //设定水印图像的混色模式
         imagealphablending($water, true);
 
+        //设置水印的默认坐标
+        $x = $y = 0;
         /* 设定水印位置 */
         switch ($locate) {
             /* 右下角水印 */
@@ -451,13 +466,14 @@ class Gd
 
     /**
      * 图像添加文字
-     * @param  string  $text   添加的文字
-     * @param  string  $font   字体路径
-     * @param  integer $size   字号
-     * @param  string  $color  文字颜色
+     * @param  string $text 添加的文字
+     * @param  string $font 字体路径
+     * @param  integer $size 字号
+     * @param  string $color 文字颜色
      * @param  integer $locate 文字写入位置
      * @param  integer $offset 文字相对当前位置的偏移量
-     * @param  integer $angle  文字倾斜角度
+     * @param  integer $angle 文字倾斜角度
+     * @throws \Think\Exception
      */
     public function text($text, $font, $size, $color = '#00000000',
         $locate = Image::IMAGE_WATER_SOUTHEAST, $offset = 0, $angle = 0) {

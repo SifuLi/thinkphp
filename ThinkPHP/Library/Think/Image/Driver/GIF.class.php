@@ -30,6 +30,7 @@ class GIF
      * 构造方法，用于解码GIF图片
      * @param string $src GIF图片数据
      * @param string $mod 图片数据类型
+     * @throws \Think\Exception
      */
     public function __construct($src = null, $mod = 'url')
     {
