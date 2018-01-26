@@ -94,7 +94,8 @@ class File extends Cache
             $expire = (int) substr($content, 8, 12);
             if (0 != $expire && time() > filemtime($filename) + $expire) {
                 //缓存过期删除缓存文件
-                return is_file($filename) ? unlink($filename) : false;
+                @unlink($filename);
+                return false;
             }
             if (C('DATA_CACHE_CHECK')) {
 //开启数据校验
