@@ -280,7 +280,7 @@ class RelationModel extends Model
             // 遍历关联定义
             foreach ($this->_link as $key => $val) {
                 // 操作制定关联类型
-                $mappingName = $val['mapping_name'] ? $val['mapping_name'] : $key; // 映射名称
+                $mappingName = isset($val['mapping_name']) ? $val['mapping_name'] : $key; // 映射名称
                 if (empty($name) || true === $name || $mappingName == $name || (is_array($name) && in_array($mappingName, $name))) {
                     // 操作制定的关联
                     $mappingType  = !empty($val['mapping_type']) ? $val['mapping_type'] : $val; //  关联类型
