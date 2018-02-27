@@ -48,6 +48,11 @@ class File
         if (is_file($destination) && floor($this->config['log_file_size']) <= filesize($destination)) {
             rename($destination, dirname($destination) . '/' . basename($destination, '.log') . '_' . time() . '.log');
         }
+        if(IS_CLI){
+            $_SERVER['REMOTE_ADDR'] = '';
+            $_SERVER['REQUEST_METHOD'] = 'CLI';
+            $_SERVER['REQUEST_URI'] = '';
+        }
         error_log("[{$now}] " . $_SERVER['REMOTE_ADDR'] . ' [' . $_SERVER['REQUEST_METHOD'] . '] ' . $_SERVER['REQUEST_URI'] . "\r\n{$log}\r\n", 3, $destination);
     }
 }

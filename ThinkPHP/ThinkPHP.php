@@ -92,6 +92,9 @@ if (!IS_CLI) {
         $_root = rtrim(dirname(_PHP_FILE_), '/');
         define('__ROOT__', (('/' == $_root || '\\' == $_root) ? '' : $_root));
     }
+}else{
+    define('_PHP_FILE_', '');
+    define('__ROOT__', '');
 }
 
 // 加载核心Think类
