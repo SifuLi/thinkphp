@@ -93,6 +93,7 @@ class File extends Cache
         if (false !== $content) {
             $expire = (int) substr($content, 8, 12);
             if (0 != $expire && time() > filemtime($filename) + $expire) {
+                clearstatcache(); // 清除文件状态缓存
                 //缓存过期删除缓存文件
                 is_file($filename) && @unlink($filename);
                 return false;
