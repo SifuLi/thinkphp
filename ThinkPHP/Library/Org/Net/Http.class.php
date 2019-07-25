@@ -145,11 +145,13 @@ class Http
      * @access public
      * @param string $filename 下载文件名
      * @param string $showname 下载显示的文件名
-     * @param string $content  下载的内容
-     * @param integer $expire  下载内容浏览器缓存时间
+     * @param string $content 下载的内容
+     * @param integer $expire 下载内容浏览器缓存时间
+     * @param bool $del 下载后是否删除文件
      * @return void
+     * @throws \Think\Exception
      */
-    public static function download($filename, $showname = '', $content = '', $expire = 180)
+    public static function download($filename, $showname = '', $content = '', $expire = 180, $del = false)
     {
         if (is_file($filename)) {
             $length = filesize($filename);
@@ -164,29 +166,30 @@ class Http
         if (empty($showname)) {
             $showname = $filename;
         }
-        $showname = self::get_basename($showname);;
+        $showname = self::get_basename($showname);
         if (!empty($filename)) {
             $finfo = new \finfo(FILEINFO_MIME);
             $type  = $finfo->file($filename);
         } else {
-            $type = "application/octet-stream";
+            $type = 'application/octet-stream';
         }
         //发送Http Header信息 开始下载
-        header("Pragma: public");
-        header("Cache-control: max-age=" . $expire);
+        header('Pragma: public');
+        header('Cache-control: max-age='. $expire);
         //header('Cache-Control: no-store, no-cache, must-revalidate');
-        header("Expires: " . gmdate("D, d M Y H:i:s", time() + $expire) . "GMT");
-        header("Last-Modified: " . gmdate("D, d M Y H:i:s", time()) . "GMT");
-        header("Content-Disposition: attachment; filename=" . $showname);
-        header("Content-Length: " . $length);
-        header("Content-type: " . $type);
+        header('Expires: '. gmdate('D, d M Y H:i:s', time() + $expire) .'GMT');
+        header('Last-Modified: '. gmdate('D, d M Y H:i:s', time()) .'GMT');
+        header('Content-Disposition: attachment; filename='. $showname);
+        header('Content-Length: '. $length);
+        header('Content-type: '. $type);
         header('Content-Encoding: none');
-        header("Content-Transfer-Encoding: binary");
+        header('Content-Transfer-Encoding: binary');
         // 清空文件的头部信息，解决文件下载无法打开问题
         ob_clean(); // 清空缓冲区
         flush();  // 刷新输出缓冲
         if ('' == $content) {
             readfile($filename);
+            $del && unlink($filename);
         } else {
             echo ($content);
         }
