@@ -1,5 +1,5 @@
 {
-    "name": "topthink/thinkphp",
+    "name": "lisifu/thinkphp",
     "description": "the ThinkPHP Framework",
     "type": "framework",
     "keywords": ["framework","thinkphp","ORM"],
