@@ -110,13 +110,13 @@ class App
             $action = ACTION_NAME . C('ACTION_SUFFIX');
         }
         try {
-            self::invokeAction($module, $action);
+            $data = self::invokeAction($module, $action);
         } catch (\ReflectionException $e) {
             // 方法调用发生异常后 引导到__call方法处理
             $method = new \ReflectionMethod($module, '__call');
-            $method->invokeArgs($module, array($action, ''));
+            $data = $method->invokeArgs($module, array($action, ''));
         }
-        return;
+        return $data;
     }
 
     public static function invokeAction($module, $action)
@@ -173,9 +173,9 @@ class App
                     }
                 }
                 array_walk_recursive($args, 'think_filter');
-                $method->invokeArgs($module, $args);
+                $data = $method->invokeArgs($module, $args);
             } else {
-                $method->invoke($module);
+                $data = $method->invoke($module);
             }
             // 后置操作
             if ($class->hasMethod('_after_' . $action)) {
@@ -188,6 +188,7 @@ class App
             // 操作方法不是Public 抛出异常
             throw new \ReflectionException();
         }
+        return $data;
     }
 
     /**
@@ -210,9 +211,34 @@ class App
         }
         // 记录应用初始化时间
         G('initTime');
-        App::exec();
+        $data = App::exec();
         // 应用结束标签
         Hook::listen('app_end');
+        if(!is_null($data)) {
+            $type = C('DEFAULT_AJAX_RETURN');
+            switch (strtoupper($type)) {
+                case 'JSON':
+                    // 返回JSON数据格式到客户端 包含状态信息
+                    header('Content-Type:application/json; charset=utf-8');
+                    exit(json_encode($data, JSON_UNESCAPED_UNICODE));
+                case 'XML':
+                    // 返回xml格式数据
+                    header('Content-Type:text/xml; charset=utf-8');
+                    exit(xml_encode($data));
+                case 'JSONP':
+                    // 返回JSON数据格式到客户端 包含状态信息
+                    header('Content-Type:application/json; charset=utf-8');
+                    $handler = isset($_GET[C('VAR_JSONP_HANDLER')]) ? $_GET[C('VAR_JSONP_HANDLER')] : C('DEFAULT_JSONP_HANDLER');
+                    exit($handler.'('.json_encode($data, JSON_UNESCAPED_UNICODE).');');
+                case 'EVAL':
+                    // 返回可执行的js脚本
+                    header('Content-Type:text/html; charset=utf-8');
+                    exit($data);
+                default:
+                    // 用于扩展其他返回格式数据
+                    Hook::listen('ajax_return', $data);
+            }
+        }
         return;
     }
 
