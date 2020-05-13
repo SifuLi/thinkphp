@@ -293,7 +293,7 @@ abstract class Driver
      */
     public function commit()
     {
-        if ($this->transTimes == 1) {
+        if (1 == $this->transTimes) {
             // 由嵌套事物的最外层进行提交
             $result = $this->_linkID->commit();
             $this->transTimes = 0;
@@ -449,12 +449,13 @@ abstract class Driver
     }
 
     /**
-     * 字段名分析
-     * @access protected
+     * 字段和表名处理
+     * @access public
      * @param string $key
+     * @param bool   $strict
      * @return string
      */
-    protected function parseKey($key)
+    public function parseKey($key, $strict = false)
     {
         return $key;
     }
@@ -759,29 +760,34 @@ abstract class Driver
             return '';
         }
         $array = array();
+        if (is_string($order) && '[RAND]' != $order) {
+            $order = array_map('trim', explode(',', $order));
+        }
+
         if (is_array($order)) {
             foreach ($order as $key => $val) {
                 if (is_numeric($key)) {
-                    if (false === strpos($val, '(')) {
-                        $array[] = $this->parseKey($val);
-                    }
+                    list($key, $sort) = explode(' ', strpos($val, ' ') ? $val : $val . ' ');
                 } else {
-                    $sort    = in_array(strtolower($val), array('asc', 'desc')) ? ' ' . $val : '';
-                    $array[] = $this->parseKey($key) . $sort;
+                    $sort = $val;
+                    }
+
+                if (preg_match('/^[\w\.]+$/', $key)) {
+                    $sort = strtoupper($sort);
+                    $sort = in_array($sort, ['ASC', 'DESC'], true) ? ' ' . $sort : '';
+                    if (strpos($key, '.')) {
+                        list($alias, $key) = explode('.', $key);
+                        $array[]           = $this->parseKey($alias, true) . '.' . $this->parseKey($key, true) . $sort;
+                } else {
+                        $array[] = $this->parseKey($key, true) . $sort;
                 }
+            }
             }
         } elseif ('[RAND]' == $order) {
             // 随机排序
             $array[] = $this->parseRand();
-        } else {
-            foreach (explode(',', $order) as $val) {
-                if (preg_match('/\s+(ASC|DESC)$/i', rtrim($val), $match, PREG_OFFSET_CAPTURE)) {
-                    $array[] = $this->parseKey(ltrim(substr($val, 0, $match[0][1]))) . ' ' . $match[1][0];
-                } elseif (false === strpos($val, '(')) {
-                    $array[] = $this->parseKey($val);
                 }
-            }
-        }
+
         $order = implode(',', $array);
         return !empty($order) ? ' ORDER BY ' . $order : '';
     }

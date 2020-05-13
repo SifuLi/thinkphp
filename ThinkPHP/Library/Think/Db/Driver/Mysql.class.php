@@ -94,14 +94,24 @@ class Mysql extends Driver
 
     /**
      * 字段和表名处理
-     * @access protected
+     * @access public
      * @param string $key
+     * @param bool   $strict
      * @return string
      */
-    protected function parseKey($key)
+    public function parseKey($key, $strict = false)
     {
+        if (is_int($key)) {
+            return $key;
+        }
+
         $key = trim($key);
-        if (!is_numeric($key) && !preg_match('/[,\'\"\*\(\)`.\s]/', $key)) {
+
+        if ($strict && !preg_match('/^[\w\.\*]+$/', $key)) {
+            E('not support data:' . $key);
+        }
+
+        if ('*' != $key && !preg_match('/[,\'\"\*\(\)`.\s]/', $key)) {
             $key = '`' . $key . '`';
         }
         return $key;
@@ -197,10 +207,10 @@ class Mysql extends Driver
                 }
 
                 switch ($val[0]) {
-                    case 'exp':    // 表达式
+                    case 'exp': // 表达式
                         $updates[] = $this->parseKey($key) . "=($val[1])";
                         break;
-                    case 'value':// 值
+                    case 'value': // 值
                     default:
                         $name      = count($this->bind);
                         $updates[] = $this->parseKey($key) . "=:" . $name;
