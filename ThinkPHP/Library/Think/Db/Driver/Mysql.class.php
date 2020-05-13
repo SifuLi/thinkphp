@@ -94,15 +94,24 @@ class Mysql extends Driver
 
     /**
      * 字段和表名处理
-     * @access protected
+     * @access public
      * @param string $key
      * @param bool   $strict
      * @return string
      */
-    protected function parseKey($key, $strict = false)
+    public function parseKey($key, $strict = false)
     {
+        if (is_int($key)) {
+            return $key;
+        }
+
         $key = trim($key);
-        if ($strict || (!is_numeric($key) && !preg_match('/[,\'\"\*\(\)`.\s]/', $key))) {
+
+        if ($strict && !preg_match('/^[\w\.\*]+$/', $key)) {
+            E('not support data:' . $key);
+        }
+
+        if ('*' != $key && !preg_match('/[,\'\"\*\(\)`.\s]/', $key)) {
             $key = '`' . $key . '`';
         }
         return $key;
