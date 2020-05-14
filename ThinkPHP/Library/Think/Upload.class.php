@@ -47,8 +47,9 @@ class Upload
 
     /**
      * 构造方法，用于构造上传实例
-     * @param array  $config 配置
+     * @param array $config 配置
      * @param string $driver 要使用的上传驱动 LOCAL-本地上传驱动，FTP-FTP上传驱动
+     * @param null $driverConfig 驱动配置信息
      */
     public function __construct($config = array(), $driver = '', $driverConfig = null)
     {
@@ -63,13 +64,13 @@ class Upload
             if (is_string($this->mimes)) {
                 $this->config['mimes'] = explode(',', $this->mimes);
             }
-            $this->config['mimes'] = array_map('strtolower', $this->mimes);
+            $this->config['mimes'] = array_map('strtolower', $this->config['mimes']);
         }
         if (!empty($this->config['exts'])) {
             if (is_string($this->exts)) {
                 $this->config['exts'] = explode(',', $this->exts);
             }
-            $this->config['exts'] = array_map('strtolower', $this->exts);
+            $this->config['exts'] = array_map('strtolower', $this->config['exts']);
         }
     }
 
@@ -179,7 +180,7 @@ class Upload
             }
 
             /* 调用回调函数检测文件是否存在 */
-            $data = call_user_func($this->callback, $file);
+            is_callable($this->callback) && $data = call_user_func($this->callback, $file);
             if ($this->callback && $data) {
                 if (file_exists('.' . $data['path'])) {
                     $info[$key] = $data;
@@ -270,7 +271,7 @@ class Upload
         $class          = strpos($driver, '\\') ? $driver : 'Think\\Upload\\Driver\\' . ucfirst(strtolower($driver));
         $this->uploader = new $class($config);
         if (!$this->uploader) {
-            E("不存在上传驱动：{$name}");
+            E("不存在上传驱动：{$driver}");
         }
     }
 
