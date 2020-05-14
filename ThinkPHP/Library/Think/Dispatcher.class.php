@@ -133,7 +133,7 @@ class Dispatcher
             }
             define('__INFO__', trim($_SERVER['PATH_INFO'], '/'));
             // 去除URL后缀
-            $_SERVER['PATH_INFO'] = preg_replace('/\.' . __EXT__ . '$/i', '', __INFO__);
+            $_SERVER['PATH_INFO'] = preg_replace('/\.' . preg_quote(__EXT__,'/') . '$/i', '', __INFO__);
             $paths = explode($depr, trim($_SERVER['PATH_INFO'], $depr));
         }
 
