@@ -309,13 +309,13 @@ class Route
                                     // 分离参数
                                     list($route[0], $params) = explode('?', $route[0], 2);
                                     if (!empty($params)) {
-                                        foreach (explode('&', $params) as $key => $val) {
+                                        foreach (explode('&', $params) as $key1 => $val) {
                                             if (0 === strpos($val, ':')) {
                                                 // 动态参数
                                                 $val = substr($val, 1);
-                                                $args[$key] = strpos($val, '|') ? explode('|', $val, 2) : array($val);
+                                                $args[$key1] = strpos($val, '|') ? explode('|', $val, 2) : array($val);
                                             } else {
-                                                $route[1][$key] = $val;
+                                                $route[1][$key1] = $val;
                                             }
                                         }
                                     }
