@@ -98,18 +98,14 @@ class Lite
                 $config = $this->config;
             }
 
-            try {
-                if (empty($config['dsn'])) {
-                    $config['dsn'] = $this->parseDsn($config);
-                }
-                if (version_compare(PHP_VERSION, '5.3.6', '<=')) {
-                    //禁用模拟预处理语句
-                    $this->options[PDO::ATTR_EMULATE_PREPARES] = false;
-                }
-                $this->linkID[$linkNum] = new PDO($config['dsn'], $config['username'], $config['password'], $this->options);
-            } catch (\PDOException $e) {
-                E($e->getMessage());
+            if (empty($config['dsn'])) {
+                $config['dsn'] = $this->parseDsn($config);
             }
+            if (version_compare(PHP_VERSION, '5.3.6', '<=')) {
+                //禁用模拟预处理语句
+                $this->options[PDO::ATTR_EMULATE_PREPARES] = false;
+            }
+            $this->linkID[$linkNum] = new PDO($config['dsn'], $config['username'], $config['password'], $this->options);
         }
         return $this->linkID[$linkNum];
     }

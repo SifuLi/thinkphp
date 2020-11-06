@@ -232,6 +232,7 @@ class Mysql extends Driver
      * @param string $str  sql指令
      * @param boolean $fetchSql  不执行只是获取SQL
      * @return mixed
+     * @throw \PDOException
      */
     public function procedure($str, $fetchSql = false)
     {
@@ -274,6 +275,7 @@ class Mysql extends Driver
         } catch (\PDOException $e) {
             $this->error();
             $this->_linkID->setAttribute(\PDO::ATTR_ERRMODE, $this->options[\PDO::ATTR_ERRMODE]);
+            throw $e;
             return false;
         }
     }

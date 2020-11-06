@@ -92,6 +92,11 @@ abstract class Driver
     /**
      * 连接数据库方法
      * @access public
+     * @param string $config
+     * @param int $linkNum
+     * @param bool $autoConnection
+     * @return PDO
+     * @throw \PDOException
      */
     public function connect($config = '', $linkNum = 0, $autoConnection = false)
     {
@@ -114,7 +119,7 @@ abstract class Driver
                     trace($e->getMessage(), '', 'ERR');
                     return $this->connect($autoConnection, $linkNum);
                 } elseif ($config['debug']) {
-                    E($e->getMessage());
+                    throw $e;
                 }
             }
         }
@@ -143,9 +148,10 @@ abstract class Driver
      * 执行查询 返回数据集
      * @access public
      * @param string $str  sql指令
-     * @param boolean $fetchSql  不执行只是获取SQL
-     * @param boolean $master  是否在主服务器读操作
+     * @param bool $fetchSql  不执行只是获取SQL
+     * @param bool $master  是否在主服务器读操作
      * @return mixed
+     * @throw \PDOException
      */
     public function query($str, $fetchSql = false, $master = false)
     {
@@ -196,6 +202,7 @@ abstract class Driver
             }
         } catch (\PDOException $e) {
             $this->error();
+            throw $e;
             return false;
         }
     }
@@ -206,6 +213,7 @@ abstract class Driver
      * @param string $str  sql指令
      * @param boolean $fetchSql  不执行只是获取SQL
      * @return mixed
+     * @throw \PDOException
      */
     public function execute($str, $fetchSql = false)
     {
@@ -260,6 +268,7 @@ abstract class Driver
             }
         } catch (\PDOException $e) {
             $this->error();
+            throw $e;
             return false;
         }
     }
@@ -391,12 +400,7 @@ abstract class Driver
         }
         // 记录错误日志
         trace($this->error, '', 'ERR');
-        if ($this->config['debug']) {
-            // 开启数据库调试模式
-            E($this->error);
-        } else {
-            return $this->error;
-        }
+        return $this->error;
     }
 
     /**
