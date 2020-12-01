@@ -547,7 +547,7 @@ class Model
             // 如果条件为空 不进行删除操作 除非设置 1=1
             return false;
         }
-        if (is_array($options['where']) && isset($options['where'][$pk])) {
+        if (is_array($options['where']) && is_string($pk) && isset($options['where'][$pk])) {
             $pkValue = $options['where'][$pk];
         }
 
