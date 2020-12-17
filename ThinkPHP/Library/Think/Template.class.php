@@ -742,9 +742,10 @@ class Template
      * @access private
      * @param string $tmplPublicName  公共模板文件名
      * @param array $vars  要传递的变量列表
+     * @param bool $extend
      * @return string
      */
-    private function parseIncludeItem($tmplPublicName, $vars = array(), $extend)
+    private function parseIncludeItem($tmplPublicName, $vars = array(), $extend = true)
     {
         // 分析模板文件名并读取内容
         $parseStr = $this->parseTemplateName($tmplPublicName);
