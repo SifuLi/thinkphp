@@ -101,7 +101,7 @@ class Redis extends Cache
      */
     public function rm($name)
     {
-        return $this->handler->delete($this->options['prefix'] . $name);
+        return $this->handler->del($this->options['prefix'] . $name);
     }
 
     /**
