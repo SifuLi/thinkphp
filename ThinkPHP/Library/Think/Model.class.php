@@ -13,6 +13,7 @@ namespace Think;
 /**
  * ThinkPHP Model模型类
  * 实现了ORM和ActiveRecords模式
+ * @method order(string $string)
  */
 class Model
 {

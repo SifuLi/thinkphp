@@ -1407,6 +1407,9 @@ function session($name = '', $value = '')
         if (isset($name['use_cookies'])) {
             ini_set('session.use_cookies', $name['use_cookies'] ? 1 : 0);
         }
+        if (isset($name['cookie_httponly'])) {
+            ini_set('session.cookie_httponly', $name['cookie_httponly'] ? 1 : 0);
+        }
 
         if (isset($name['cache_limiter'])) {
             session_cache_limiter($name['cache_limiter']);
