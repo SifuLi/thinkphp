@@ -1559,7 +1559,7 @@ function cookie($name = '', $value = '', $option = null)
 
         $config = array_merge($config, array_change_key_case($option));
     }
-    if (!empty($config['httponly'])) {
+    if (!empty($config['httponly']) && session_status() == PHP_SESSION_NONE) {
         ini_set("session.cookie_httponly", 1);
     }
     // 清除指定前缀的所有cookie
