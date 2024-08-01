@@ -101,13 +101,22 @@ class Template
      */
     public function loadTemplate($templateFile, $prefix = '')
     {
-        if (is_file($templateFile)) {
-            $this->templateFile = $templateFile;
-            // 读取模板文件内容
-            $tmplContent = file_get_contents($templateFile);
-        } else {
+        try {
+            set_error_handler(function($severity, $message, $file, $line) {
+                throw new \ErrorException($message, 0, $severity, $file, $line);
+            }, E_WARNING);
+            if (is_file($templateFile)) {
+                $this->templateFile = $templateFile;
+                // 读取模板文件内容
+                $tmplContent = file_get_contents($templateFile);
+            } else {
+                $tmplContent = $templateFile;
+            }
+        } catch (\Exception $e) {
             $tmplContent = $templateFile;
         }
+        // 恢复默认错误处理
+        set_error_handler(null, E_WARNING);
         // 根据模版文件名定位缓存文件
         $tmplCacheFile = $this->config['cache_path'] . $prefix . md5($templateFile) . $this->config['cache_suffix'];
 
