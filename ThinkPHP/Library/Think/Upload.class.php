@@ -179,6 +179,7 @@ class Upload
                 $file['sha1'] = sha1_file($file['tmp_name']);
             }
 
+            $data = '';
             /* 调用回调函数检测文件是否存在 */
             is_callable($this->callback) && $data = call_user_func($this->callback, $file);
             if ($this->callback && $data) {

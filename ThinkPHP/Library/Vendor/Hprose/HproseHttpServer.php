@@ -83,8 +83,9 @@ class HproseHttpServer {
             else {
                 $error = preg_replace('/ in <b>.*<\/b>$/', '', $match[1]);
             }
+            $error = trim($error);
             $data = HproseTags::TagError .
-                 HproseFormatter::serialize(trim($error), true) .
+                 HproseFormatter::serialize($error, true) .
                  HproseTags::TagEnd;
         }
         if ($this->filter) $data = $this->filter->outputFilter($data);

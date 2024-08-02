@@ -12,6 +12,7 @@
 namespace Think\Db\Driver;
 
 use Think\Db\Driver;
+use Think\Exception;
 
 /**
  * Mongo数据库驱动
@@ -46,9 +47,12 @@ class Mongo extends Driver
 
     /**
      * 连接数据库方法
+     * @param string $config
+     * @param int $linkNum
+     * @param false $autoConnection
      * @access public
      */
-    public function connect($config = '', $linkNum = 0)
+    public function connect($config = '', $linkNum = 0, $autoConnection = false)
     {
         if (!isset($this->linkID[$linkNum])) {
             if (empty($config)) {
@@ -244,9 +248,11 @@ class Mongo extends Driver
      * @access public
      * @param array $dataList 数据
      * @param array $options 参数表达式
+     * @param bool $replace
      * @return bool
+     * @throws Exception
      */
-    public function insertAll($dataList, $options = array())
+    public function insertAll($dataList, $options = array(), $replace = false)
     {
         if (isset($options['table'])) {
             $this->switchCollection($options['table']);

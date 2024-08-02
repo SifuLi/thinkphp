@@ -93,7 +93,7 @@ class Mssqldblib extends Driver{
      * @param bool $strict
      * @return string
      */
-    protected function parseKey($key, $strict = false) {
+    public function parseKey($key, $strict = false) {
         $key   =  trim($key);
         if(!is_numeric($key) && !preg_match('/[,\'\"\*\(\)\[.\s]/',$key)) {
            $key = '['.$key.']';

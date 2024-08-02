@@ -22,10 +22,10 @@ body{ background: #fff; font-family: '微软雅黑'; color: #333; font-size: 16p
 </head>
 <body>
 <div class="system-message">
-<?php if(isset($message)) {?>
+<?php if(isset($message)) { ?>
 <h1>:)</h1>
 <p class="success"><?php echo($message); ?></p>
-<?php }else{?>
+<?php }else{ ?>
 <h1>:(</h1>
 <p class="error"><?php echo($error); ?></p>
 <?php }?>
@@ -39,7 +39,7 @@ body{ background: #fff; font-family: '微软雅黑'; color: #333; font-size: 16p
 var wait = document.getElementById('wait'),href = document.getElementById('href').href;
 var interval = setInterval(function(){
 	var time = --wait.innerHTML;
-	if(time <= 0) {
+	if(!(time > 0)) {
 		location.href = href;
 		clearInterval(interval);
 	};

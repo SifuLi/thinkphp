@@ -259,11 +259,7 @@ class PHPRPC_Server {
         return call_user_func_array($function, $arguments);
     }
     function getRequest($name) {
-        $result = $_REQUEST[$name];
-        if (get_magic_quotes_gpc()) {
-            $result = stripslashes($result);
-        }
-        return $result;
+        return $_REQUEST[$name];
     }
     function getBooleanRequest($name) {
         $var = true;
