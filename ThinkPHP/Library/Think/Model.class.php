@@ -471,8 +471,17 @@ class Model
             }
         }
 
-        if (is_array($options['where']) && isset($options['where'][$pk])) {
-            $pkValue = $options['where'][$pk];
+        if (is_array($options['where'])) {
+            if(is_array($pk)){
+                // 复合主键
+                foreach ($pk as $field) {
+                    if (isset($data[$field])) {
+                        $pkValue[$field] = $data[$field];
+                    }
+                }
+            }elseif(isset($options['where'][$pk])){
+                $pkValue = $options['where'][$pk];
+            }
         }
         if (false === $this->_before_update($data, $options)) {
             return false;
@@ -480,7 +489,11 @@ class Model
         $result = $this->db->update($data, $options);
         if (false !== $result && is_numeric($result)) {
             if (isset($pkValue)) {
-                $data[$pk] = $pkValue;
+                if(is_array($pkValue)) {
+                    $data += $pkValue;
+                }else {
+                    $data[$pk] = $pkValue;
+                }
             }
 
             $this->_after_update($data, $options);
