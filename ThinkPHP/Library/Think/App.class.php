@@ -222,8 +222,10 @@ class App
                     // 发送状态码
                     http_response_code($data->getStatusCode());
                     // 发送头部信息
-                    foreach ($data->getHeaders() as $name => $val) {
-                        header($name . (!is_null($val) ? ':' . $val : ''));
+                    foreach ($data->getHeaders() as $name => $values) {
+                        foreach ($values as $value) {
+                            header("$name: $value", false); // 使用逗号分隔多个值
+                        }
                     }
                 }
 
