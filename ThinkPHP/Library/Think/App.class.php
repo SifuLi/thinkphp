@@ -215,6 +215,26 @@ class App
         // 应用结束标签
         Hook::listen('app_end');
         if(!is_null($data)) {
+            if ($data instanceof \Psr\Http\Message\ResponseInterface) {
+                // 依赖于guzzlehttp/psr7
+                // 处理输出数据
+                if (!headers_sent() && !empty($data->getHeaders())) {
+                    // 发送状态码
+                    http_response_code($data->getStatusCode());
+                    // 发送头部信息
+                    foreach ($data->getHeaders() as $name => $val) {
+                        header($name . (!is_null($val) ? ':' . $val : ''));
+                    }
+                }
+
+                echo $data->getBody()->getContents();
+
+                if (function_exists('fastcgi_finish_request')) {
+                    // 提高页面响应
+                    fastcgi_finish_request();
+                }
+                exit();
+            }
             $type = C('DEFAULT_AJAX_RETURN');
             switch (strtoupper($type)) {
                 case 'JSON':
@@ -228,7 +248,7 @@ class App
                 case 'JSONP':
                     // 返回JSON数据格式到客户端 包含状态信息
                     header('Content-Type:application/json; charset=utf-8');
-                    $handler = isset($_GET[C('VAR_JSONP_HANDLER')]) ? $_GET[C('VAR_JSONP_HANDLER')] : C('DEFAULT_JSONP_HANDLER');
+                    $handler = $_GET[C('VAR_JSONP_HANDLER')] ?? C('DEFAULT_JSONP_HANDLER');
                     exit($handler.'('.json_encode($data, JSON_UNESCAPED_UNICODE).');');
                 case 'EVAL':
                     // 返回可执行的js脚本
