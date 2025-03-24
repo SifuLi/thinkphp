@@ -628,6 +628,7 @@ class Model
             // 用于子查询 不查询只返回SQL
             $this->options['fetch_sql'] = true;
         }
+        $this->_before_select();
         // 分析表达式
         $options = $this->_parseOptions();
         // 判断查询缓存
@@ -671,6 +672,9 @@ class Model
         }
         return $resultSet;
     }
+    // 查询前的回调方法
+    protected function _before_select(): void
+    {}
     // 查询成功后的回调方法
     protected function _after_select(&$resultSet, $options)
     {}
@@ -813,6 +817,7 @@ class Model
                 return false;
             }
         }
+        $this->_before_find();
         // 总是查找一条记录
         $this->options['limit'] = 1;
         // 分析表达式
@@ -851,6 +856,9 @@ class Model
         }
         return $this->data;
     }
+    // 查询前的回调方法
+    protected function _before_find()
+    {}
     // 查询成功的回调方法
     protected function _after_find(&$result, $options)
     {}
