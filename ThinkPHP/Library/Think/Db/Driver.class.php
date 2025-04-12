@@ -60,7 +60,7 @@ abstract class Driver
     // 数据库表达式
     protected $exp = array('eq' => '=', 'neq' => '<>', 'gt' => '>', 'egt' => '>=', 'lt' => '<', 'elt' => '<=', 'notlike' => 'NOT LIKE', 'like' => 'LIKE', 'in' => 'IN', 'notin' => 'NOT IN', 'not in' => 'NOT IN', 'between' => 'BETWEEN', 'not between' => 'NOT BETWEEN', 'notbetween' => 'NOT BETWEEN');
     // 查询表达式
-    protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
+    protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING% %UNION%%ORDER%%LIMIT% %LOCK%%COMMENT%';
     // 查询次数
     protected $queryTimes = 0;
     // 执行次数
@@ -859,7 +859,7 @@ abstract class Driver
             $str = 'UNION ';
         }
         foreach ($union as $u) {
-            $sql[] = $str . (is_array($u) ? $this->buildSelectSql($u) : $u);
+            $sql[] = $str . '('. (is_array($u) ? $this->buildSelectSql($u) : $u). ')';
         }
         return implode(' ', $sql);
     }
