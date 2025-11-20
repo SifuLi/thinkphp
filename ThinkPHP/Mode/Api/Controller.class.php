@@ -41,10 +41,10 @@ abstract class Controller
         if (0 === strcasecmp($method, ACTION_NAME . C('ACTION_SUFFIX'))) {
             if (method_exists($this, '_empty')) {
                 // 如果定义了_empty操作 则调用
-                $this->_empty($method, $args);
-            } else {
-                E(L('_ERROR_ACTION_') . ':' . ACTION_NAME);
+                return $this->_empty($method, $args);
             }
+
+            E(L('_ERROR_ACTION_') . ':' . ACTION_NAME);
         } else {
             E(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'));
             return;
