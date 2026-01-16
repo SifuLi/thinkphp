@@ -247,7 +247,7 @@ class Lite
         //数据rollback 支持
         if (0 == $this->transTimes) {
             // 记录当前操作PDO
-            $this->transPdo = $this->_linkID;
+            $this->transPDO = $this->_linkID;
             $this->_linkID->beginTransaction();
         }
         $this->transTimes++;
@@ -265,7 +265,7 @@ class Lite
             // 由嵌套事物的最外层进行提交
             $result = $this->_linkID->commit();
             $this->transTimes = 0;
-            $this->transPdo = null;
+            $this->transPDO = null;
             if (!$result) {
                 $this->error();
                 return false;
@@ -286,7 +286,7 @@ class Lite
         if ($this->transTimes == 1) {
             $result = $this->_linkID->rollback();
             $this->transTimes = 0;
-            $this->transPdo = null;
+            $this->transPDO = null;
             if (!$result) {
                 $this->error();
                 return false;
