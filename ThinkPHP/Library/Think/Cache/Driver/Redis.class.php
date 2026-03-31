@@ -34,6 +34,7 @@ class Redis extends Cache
             'password'   => C('REDIS_PASSWORD') ?: '',
             'timeout'    => C('DATA_CACHE_TIMEOUT') ?: false,
             'persistent' => false,
+            'db'         => C('REDIS_DB') ?: 0, // 选择数据库
         ), $options);
 
         $this->options           = $options;
@@ -41,13 +42,14 @@ class Redis extends Cache
         $this->options['prefix'] = isset($options['prefix']) ? $options['prefix'] : C('DATA_CACHE_PREFIX');
         $this->options['length'] = isset($options['length']) ? $options['length'] : 0;
         $func                    = $options['persistent'] ? 'pconnect' : 'connect';
-        $this->handler           = new \Redis;
+        $this->handler           = new \Redis();
         false === $options['timeout'] ?
         $this->handler->$func($options['host'], $options['port']) :
         $this->handler->$func($options['host'], $options['port'], $options['timeout']);
         if ('' != $options['password']) {
             $this->handler->auth($options['password']);
         }
+        $this->handler->select($options['db'] ?: 0);
     }
 
     /**
