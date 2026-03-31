@@ -36,8 +36,10 @@ abstract class Driver
     protected $error = '';
     // 数据库连接ID 支持多个连接
     protected $linkID = array();
-    // 当前连接ID
+    // 当前连接 ID
     protected $_linkID = null;
+    // 当前连接的服务器索引
+    protected $currentServerIndex = 0;
     // 数据库连接参数配置
     protected $config = array(
         'type'           => '', // 数据库类型
@@ -94,12 +96,14 @@ abstract class Driver
      * @access public
      * @param string $config
      * @param int $linkNum
-     * @param bool $autoConnection
+     * @param bool|array $autoConnection
      * @return PDO
      * @throw \PDOException
      */
     public function connect($config = '', $linkNum = 0, $autoConnection = false)
     {
+        // 记录当前连接的服务器索引
+        $this->currentServerIndex = $linkNum;
         if (!isset($this->linkID[$linkNum])) {
             if (empty($config)) {
                 $config = $this->config;
@@ -114,9 +118,11 @@ abstract class Driver
                     $this->options[PDO::ATTR_EMULATE_PREPARES] = false;
                 }
                 $this->linkID[$linkNum] = new PDO($config['dsn'], $config['username'], $config['password'], $this->options);
+                // 记录当前连接的服务器索引
+                $this->currentServerIndex = $linkNum;
             } catch (\PDOException $e) {
                 if ($autoConnection) {
-                    trace($e->getMessage(), '', 'ERR');
+                    trace($e->getMessage() . " [ Db_Server_Index：$linkNum->{$autoConnection['_db_index']} ]", '', 'ERR');
                     return $this->connect($autoConnection, $linkNum);
                 } elseif ($config['debug']) {
                     throw $e;
@@ -1196,7 +1202,8 @@ abstract class Driver
                 //$this->model  =   '_think_';
                 // 记录操作结束时间
                 G('queryEndTime');
-                trace($this->queryStr . ' [ RunTime:' . G('queryStartTime', 'queryEndTime') . 's ]', '', 'SQL');
+                trace($this->queryStr . ' [ '. (!empty($this->config['deploy']) ? 'Db_Server_Index:' . $this->currentServerIndex. ' | ' : '')
+                    .'RunTime:' . G('queryStartTime', 'queryEndTime') . 's ]', '', 'SQL');
             }
         }
     }
@@ -1221,7 +1228,7 @@ abstract class Driver
         } else
         // 默认单数据库
         if (!$this->_linkID) {
-            $this->_linkID = $this->connect();
+            $this->_linkID = $this->multiConnect(true);
         }
 
     }
@@ -1230,7 +1237,7 @@ abstract class Driver
      * 连接分布式服务器
      * @access protected
      * @param boolean $master 主服务器
-     * @return void
+     * @return PDO
      */
     protected function multiConnect($master = false)
     {
@@ -1240,12 +1247,12 @@ abstract class Driver
         $_config['hostname'] = explode(',', $this->config['hostname']);
         $_config['hostport'] = explode(',', $this->config['hostport']);
         $_config['database'] = explode(',', $this->config['database']);
-        $_config['dsn']      = explode(',', $this->config['dsn']);
+        $_config['dsn']      = explode(',', $this->config['dsn'] ?? '');
         $_config['charset']  = explode(',', $this->config['charset']);
 
         $m = floor(mt_rand(0, $this->config['master_num'] - 1));
         // 数据库读写是否分离
-        if ($this->config['rw_separate']) {
+        if ($this->config['rw_separate'] && count($_config['hostname']) > 1) {
             // 主从式采用读写分离
             if ($master)
             // 主服务器写入
@@ -1267,23 +1274,24 @@ abstract class Driver
 
         if ($m != $r) {
             $db_master = array(
-                'username' => isset($_config['username'][$m]) ? $_config['username'][$m] : $_config['username'][0],
-                'password' => isset($_config['password'][$m]) ? $_config['password'][$m] : $_config['password'][0],
-                'hostname' => isset($_config['hostname'][$m]) ? $_config['hostname'][$m] : $_config['hostname'][0],
-                'hostport' => isset($_config['hostport'][$m]) ? $_config['hostport'][$m] : $_config['hostport'][0],
-                'database' => isset($_config['database'][$m]) ? $_config['database'][$m] : $_config['database'][0],
-                'dsn'      => isset($_config['dsn'][$m]) ? $_config['dsn'][$m] : $_config['dsn'][0],
-                'charset'  => isset($_config['charset'][$m]) ? $_config['charset'][$m] : $_config['charset'][0],
+                'username' => $_config['username'][$m] ?? $_config['username'][0],
+                'password' => $_config['password'][$m] ?? $_config['password'][0],
+                'hostname' => $_config['hostname'][$m] ?? $_config['hostname'][0],
+                'hostport' => $_config['hostport'][$m] ?? $_config['hostport'][0],
+                'database' => $_config['database'][$m] ?? $_config['database'][0],
+                'dsn'      => $_config['dsn'][$m] ?? $_config['dsn'][0],
+                'charset'  => $_config['charset'][$m] ?? $_config['charset'][0],
+                '_db_index' => isset($_config['hostname'][$m]) ? $m : 0, // 当前连接的数据序号
             );
         }
         $db_config = array(
-            'username' => isset($_config['username'][$r]) ? $_config['username'][$r] : $_config['username'][0],
-            'password' => isset($_config['password'][$r]) ? $_config['password'][$r] : $_config['password'][0],
-            'hostname' => isset($_config['hostname'][$r]) ? $_config['hostname'][$r] : $_config['hostname'][0],
-            'hostport' => isset($_config['hostport'][$r]) ? $_config['hostport'][$r] : $_config['hostport'][0],
-            'database' => isset($_config['database'][$r]) ? $_config['database'][$r] : $_config['database'][0],
-            'dsn'      => isset($_config['dsn'][$r]) ? $_config['dsn'][$r] : $_config['dsn'][0],
-            'charset'  => isset($_config['charset'][$r]) ? $_config['charset'][$r] : $_config['charset'][0],
+            'username' => $_config['username'][$r] ?? $_config['username'][0],
+            'password' => $_config['password'][$r] ?? $_config['password'][0],
+            'hostname' => $_config['hostname'][$r] ?? $_config['hostname'][0],
+            'hostport' => $_config['hostport'][$r] ?? $_config['hostport'][0],
+            'database' => $_config['database'][$r] ?? $_config['database'][0],
+            'dsn'      => $_config['dsn'][$r] ?? $_config['dsn'][0],
+            'charset'  => $_config['charset'][$r] ?? $_config['charset'][0],
         );
         return $this->connect($db_config, $r, $r == $m ? false : $db_master);
     }

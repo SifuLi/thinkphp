@@ -461,7 +461,7 @@ class Lite
         } else
         // 默认单数据库
         if (!$this->_linkID) {
-            $this->_linkID = $this->connect();
+            $this->_linkID = $this->multiConnect(true);
         }
 
     }
