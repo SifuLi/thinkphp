@@ -224,7 +224,7 @@ function compile($filename)
     $content = trim(substr($content, 5));
     // 替换预编译指令
     $content = preg_replace('/\/\/\[RUNTIME\](.*?)\/\/\[\/RUNTIME\]/s', '', $content);
-    if (0 === strpos($content, 'namespace')) {
+    if (str_starts_with($content ?? '', 'namespace')) {
         $content = preg_replace('/namespace\s(.*?);/', 'namespace \\1{', $content, 1);
     } else {
         $content = 'namespace {' . $content;
@@ -246,7 +246,7 @@ function T($template = '', $layer = '')
 {
 
     // 解析模版资源地址
-    if (false === strpos($template, '://')) {
+    if (!str_contains($template, '://')) {
         $template = 'http://' . str_replace(':', '/', $template);
     }
     $info   = parse_url($template);
@@ -278,7 +278,7 @@ function T($template = '', $layer = '')
     if ('' == $file) {
         // 如果模板文件名为空 按照默认规则定位
         $file = CONTROLLER_NAME . $depr . ACTION_NAME;
-    } elseif (false === strpos($file, '/')) {
+    } elseif (!str_contains($file, '/')) {
         $file = CONTROLLER_NAME . $depr . $file;
     } elseif ('/' != $depr) {
         $file = substr_count($file, '/') > 1 ? substr_replace($file, $depr, strrpos($file, '/'), 1) : str_replace('/', $depr, $file);
@@ -391,7 +391,7 @@ function I($name, $default = '', $filter = null, $datas = null)
         $filters = isset($filter) ? $filter : C('DEFAULT_FILTER');
         if ($filters) {
             if (is_string($filters)) {
-                if (0 === strpos($filters, '/')) {
+                if (str_starts_with($filters, '/')) {
                     if (1 !== preg_match($filters, (string) $data)) {
                         // 支持正则验证
                         return isset($default) ? $default : null;
@@ -600,7 +600,7 @@ function load($name, $baseUrl = '', $ext = '.php')
 {
     $name = str_replace(array('.', '#'), array('/', '.'), $name);
     if (empty($baseUrl)) {
-        if (0 === strpos($name, '@/')) {
+        if (str_starts_with($name, '@/')) {
             //加载当前模块函数库
             $baseUrl = MODULE_PATH . 'Common/';
             $name    = substr($name, 2);
@@ -655,7 +655,7 @@ function D($name = '', $layer = '')
     $class = parse_res_name($name, $layer);
     if (class_exists($class)) {
         $model = new $class(basename($name));
-    } elseif (false === strpos($name, '/')) {
+    } elseif (!str_contains($name, '/')) {
         // 自动加载公共模块下面的模型
         if (!C('APP_USE_NAMESPACE')) {
             import('Common/' . $layer . '/' . $class);
@@ -977,15 +977,15 @@ function U($url = '', $vars = '', $suffix = true, $domain = false)
     if (isset($info['fragment'])) {
         // 解析锚点
         $anchor = $info['fragment'];
-        if (false !== strpos($anchor, '?')) {
+        if (str_contains($anchor, '?')) {
             // 解析参数
             list($anchor, $info['query']) = explode('?', $anchor, 2);
         }
-        if (false !== strpos($anchor, '@')) {
+        if (str_contains($anchor, '@')) {
             // 解析域名
             list($anchor, $host) = explode('@', $anchor, 2);
         }
-    } elseif (false !== strpos($url, '@')) {
+    } elseif (str_contains($url, '@')) {
         // 解析域名
         list($url, $host) = explode('@', $info['path'], 2);
     }
@@ -1000,7 +1000,7 @@ function U($url = '', $vars = '', $suffix = true, $domain = false)
             // '子域名'=>array('模块[/控制器]');
             foreach (C('APP_SUB_DOMAIN_RULES') as $key => $rule) {
                 $rule = is_array($rule) ? $rule[0] : $rule;
-                if (false === strpos($key, '*') && 0 === strpos($url, $rule)) {
+                if (!str_contains($key, '*') && str_starts_with($url, $rule)) {
                     $domain = $key . strstr($domain, '.'); // 生成对应子域名
                     $url    = substr_replace($url, '', 0, strlen($rule));
                     break;
@@ -1026,7 +1026,7 @@ function U($url = '', $vars = '', $suffix = true, $domain = false)
     $depr    = C('URL_PATHINFO_DEPR');
     $urlCase = C('URL_CASE_INSENSITIVE');
     if ($url) {
-        if (0 === strpos($url, '/')) {
+        if (str_starts_with($url, '/')) {
             // 定义路由
             $route = true;
             $url   = substr($url, 1);
@@ -1266,7 +1266,7 @@ function F($name, $value = '', $path = DATA_PATH)
     if ('' !== $value) {
         if (is_null($value)) {
             // 删除缓存
-            if (false !== strpos($name, '*')) {
+            if (str_contains($name, '*')) {
                 return false; // TODO
             } else {
                 unset($_cache[$name]);
@@ -1445,7 +1445,7 @@ function session($name = '', $value = '')
         if ('' === $name) {
             // 获取全部的session
             return $prefix ? $_SESSION[$prefix] : $_SESSION;
-        } elseif (0 === strpos($name, '[')) {
+        } elseif (str_starts_with($name, '[')) {
             // session 操作
             if ('[pause]' == $name) {
                 // 暂停session
@@ -1462,7 +1462,7 @@ function session($name = '', $value = '')
                 // 重新生成id
                 session_regenerate_id();
             }
-        } elseif (0 === strpos($name, '?')) {
+        } elseif (str_starts_with($name, '?')) {
             // 检查session
             $name = substr($name, 1);
             if (strpos($name, '.')) {
@@ -1588,7 +1588,7 @@ function cookie($name = '', $value = '', $option = null)
     if ('' === $value) {
         if (isset($_COOKIE[$name])) {
             $value = $_COOKIE[$name];
-            if (0 === strpos($value, 'think:')) {
+            if (str_starts_with($value, 'think:')) {
                 $value = substr($value, 6);
                 return array_map('urldecode', json_decode(MAGIC_QUOTES_GPC ? stripslashes($value) : $value, true));
             } else {
