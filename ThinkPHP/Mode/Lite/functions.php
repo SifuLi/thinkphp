@@ -1077,6 +1077,10 @@ function is_ssl()
     } elseif (isset($_SERVER['SERVER_PORT']) && ('443' == $_SERVER['SERVER_PORT'])) {
         return true;
     }
+    // 检查 X-Forwarded-Proto 头（适用于 CDN/负载均衡）
+    if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+        return true;
+    }
     return false;
 }
 

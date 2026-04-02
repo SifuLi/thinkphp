@@ -971,6 +971,16 @@ function layout($layout)
  */
 function U($url = '', $vars = '', $suffix = true, $domain = false)
 {
+    // 对相同参数的调用缓存结果
+    static $_urls = [];
+
+    // 生成缓存键值
+    $hash_key = md5(serialize([$url, $vars, $suffix, $domain]));
+
+    // 如果已缓存，直接返回
+    if (isset($_urls[$hash_key])) {
+        return $_urls[$hash_key];
+    }
     // 解析URL
     $info = parse_url($url);
     $url  = !empty($info['path']) ? $info['path'] : ACTION_NAME;
@@ -1150,6 +1160,8 @@ function U($url = '', $vars = '', $suffix = true, $domain = false)
     if ($domain) {
         $url = (is_ssl() ? 'https://' : 'http://') . $domain . $url;
     }
+    // 缓存结果
+    $_urls[$hash_key] = $url;
     return $url;
 }
 
@@ -1173,6 +1185,10 @@ function is_ssl()
     if (isset($_SERVER['HTTPS']) && ('1' == $_SERVER['HTTPS'] || 'on' == strtolower($_SERVER['HTTPS']))) {
         return true;
     } elseif (isset($_SERVER['SERVER_PORT']) && ('443' == $_SERVER['SERVER_PORT'])) {
+        return true;
+    }
+    // 检查 X-Forwarded-Proto 头（适用于 CDN/负载均衡）
+    if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
         return true;
     }
     return false;

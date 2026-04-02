@@ -32,6 +32,7 @@ class Template
     public $config   = array();
     private $literal = array();
     private $block   = array();
+    private $tempVar = [];
 
     /**
      * 架构函数
@@ -149,6 +150,8 @@ class Template
      */
     protected function compiler($tmplContent)
     {
+        // 模版编译过滤标签，前移，可以支持在替换值中使用模板标签和函数等
+        Hook::listen('template_filter', $tmplContent);
         //模板解析
         $tmplContent = $this->parse($tmplContent);
         // 还原被替换的Literal标签
@@ -157,8 +160,6 @@ class Template
         $tmplContent = '<?php if (!defined(\'THINK_PATH\')) exit();?>' . $tmplContent;
         // 优化生成的php代码
         $tmplContent = str_replace('?><?php', '', $tmplContent);
-        // 模版编译过滤标签
-        Hook::listen('template_filter', $tmplContent);
         return strip_whitespace($tmplContent);
     }
 
