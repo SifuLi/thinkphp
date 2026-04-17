@@ -999,14 +999,20 @@ function U($url = '', $vars = '', $suffix = true, $domain = false)
         // 解析域名
         list($url, $host) = explode('@', $info['path'], 2);
     }
+    $http_host = $_SERVER['HTTP_HOST'];
+    if (!str_contains($http_host, ':') && isset($_SERVER['SERVER_PORT'])) {
+        if ($_SERVER['SERVER_PORT'] != 80 && $_SERVER['SERVER_PORT'] != 443) {
+            $http_host .= ':' . $_SERVER['SERVER_PORT'];
+        }
+    }
     // 解析子域名
     if (isset($host)) {
-        $domain = $host . (strpos($host, '.') ? '' : strstr($_SERVER['HTTP_HOST'], '.'));
+        $domain = $host . (strpos($host, '.') ? '' : strstr($http_host, '.'));
     } elseif (true === $domain) {
-        $domain = $_SERVER['HTTP_HOST'];
+        $domain = $http_host;
         if (C('APP_SUB_DOMAIN_DEPLOY')) {
             // 开启子域名部署
-            $domain = 'localhost' == $domain ? 'localhost' : 'www' . strstr($_SERVER['HTTP_HOST'], '.');
+            $domain = 'localhost' == $domain ? 'localhost' : 'www' . strstr($http_host, '.');
             // '子域名'=>array('模块[/控制器]');
             foreach (C('APP_SUB_DOMAIN_RULES') as $key => $rule) {
                 $rule = is_array($rule) ? $rule[0] : $rule;
