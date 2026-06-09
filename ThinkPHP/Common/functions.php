@@ -1671,7 +1671,7 @@ function load_ext_file($path)
 
 /**
  * 获取客户端IP地址
- * @param integer $type 返回类型 0 返回IP地址 1 返回IPV4地址数字
+ * @param integer $type 返回类型 0 返回IP地址 1 返回IPV4/IPV6地址数字
  * @param boolean $adv 应用前是否有代理服务器(如：负载均衡)，获取真实用户IP（有可能被伪装）
  * @return mixed
  */
@@ -1683,6 +1683,8 @@ function get_client_ip($type = 0, $adv = false)
     if (isset($ips[$adv])) {
         return $ips[$adv][$type];
     }
+
+    $ip = '0.0.0.0';
 
     if ($adv) {
         if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -1703,9 +1705,30 @@ function get_client_ip($type = 0, $adv = false)
     } elseif (isset($_SERVER['REMOTE_ADDR'])) {
         $ip = $_SERVER['REMOTE_ADDR'];
     }
-    // IP地址合法验证
-    $long = sprintf("%u", ip2long($ip));
-    $ips[$adv]   = $long ? array($ip, $long) : array('0.0.0.0', 0);
+    // IP地址合法验证（兼容IPv4和IPv6）
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        // IPv6地址，转换为二进制字符串再转为十进制
+        $bin = inet_pton($ip);
+        $hex = bin2hex($bin);
+        if (function_exists('bcadd')) {
+            $long = '0';
+            $parts = unpack('N*', $bin);
+            foreach ($parts as $part) {
+                $long = bcadd(bcmul($long, '4294967296'), sprintf('%u', $part));
+            }
+        } elseif (function_exists('gmp_init')) {
+            $long = gmp_strval(gmp_init($hex, 16), 10);
+        } else {
+            // bcmath和gmp均不可用时，使用十六进制字符串作为标识
+            $long = $hex;
+        }
+        $ips[$adv] = array($ip, $long);
+    } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        $long = sprintf("%u", ip2long($ip));
+        $ips[$adv] = $long ? array($ip, $long) : array('0.0.0.0', 0);
+    } else {
+        $ips[$adv] = array('0.0.0.0', 0);
+    }
     return $ips[$adv][$type];
 }
 
