@@ -1464,7 +1464,14 @@ function session($name = '', $value = '')
         }
 
     } elseif ('' === $value) {
-        if ('' === $name) {
+        if (is_null($name)) {
+            // 清空session
+            if ($prefix) {
+                unset($_SESSION[$prefix]);
+            } else {
+                $_SESSION = array();
+            }
+        } elseif ('' === $name) {
             // 获取全部的session
             return $prefix ? $_SESSION[$prefix] : $_SESSION;
         } elseif (str_starts_with($name, '[')) {
@@ -1493,13 +1500,6 @@ function session($name = '', $value = '')
                 return $prefix ? isset($_SESSION[$prefix][$name1][$name2]) : isset($_SESSION[$name1][$name2]);
             } else {
                 return $prefix ? isset($_SESSION[$prefix][$name]) : isset($_SESSION[$name]);
-            }
-        } elseif (is_null($name)) {
-            // 清空session
-            if ($prefix) {
-                unset($_SESSION[$prefix]);
-            } else {
-                $_SESSION = array();
             }
         } elseif ($prefix) {
             // 获取session
