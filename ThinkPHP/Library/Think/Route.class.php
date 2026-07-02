@@ -254,7 +254,7 @@ class Route
     public static function ruleCache($update = false)
     {
         $result = array();
-        $module = defined('MODULE_NAME') ? '_' . MODULE_NAME : '';
+        $module = ''; // 没必要区分MODULE_NAME，实际所有module生成的都是同样的url_route_rules
         if (APP_DEBUG || $update || !$result = S('url_route_rules' . $module)) {
             // 静态路由
             $result[0] = C('URL_MAP_RULES');
