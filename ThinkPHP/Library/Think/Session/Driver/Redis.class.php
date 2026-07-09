@@ -92,7 +92,7 @@ class Redis
      */
     public function destroy($sessID)
     {
-        return $this->handle->delete($this->sessionName . $sessID) >= 0;
+        return $this->handle->del($this->sessionName . $sessID) >= 0;
     }
 
     /**
