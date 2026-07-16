@@ -11,8 +11,13 @@
 // +----------------------------------------------------------------------
 namespace Think\Session\Driver;
 
+use Think\Db as ThinkDb;
+
 /**
  * 数据库方式Session驱动
+ * 通过框架数据库抽象层实现，支持所有框架兼容的数据库类型
+ * (MySQL, PostgreSQL, SQLite, Oracle, SQL Server 等)
+ *
  *    CREATE TABLE think_session (
  *      session_id varchar(255) NOT NULL,
  *      session_expire int(11) NOT NULL,
@@ -29,116 +34,87 @@ class Db
     protected $lifeTime = '';
 
     /**
-     * session保存的数据库名
+     * session保存的数据库表名
      */
     protected $sessionTable = '';
 
     /**
-     * 数据库句柄
+     * 获取框架数据库驱动实例
+     * 自动复用框架已有的数据库连接，支持分布式和读写分离
+     * @access protected
+     * @return \Think\Db\Driver|\Think\Db\Lite
      */
-    protected $hander = array();
+    protected function getDb()
+    {
+        return ThinkDb::getInstance();
+    }
+
+    /**
+     * 获取session表名
+     * @access protected
+     * @return string
+     */
+    protected function getTable()
+    {
+        return $this->sessionTable;
+    }
+
+    /**
+     * 安全转义字符串值（不含引号包裹）
+     * @access protected
+     * @param string $value
+     * @return string
+     */
+    protected function escape($value)
+    {
+        return addslashes((string)$value);
+    }
 
     /**
      * 打开Session
      * @access public
      * @param string $savePath
      * @param mixed $sessName
+     * @return bool
      */
     public function open($savePath, $sessName)
     {
         $this->lifeTime     = C('SESSION_EXPIRE') ? C('SESSION_EXPIRE') : ini_get('session.gc_maxlifetime');
         $this->sessionTable = C('SESSION_TABLE') ? C('SESSION_TABLE') : C("DB_PREFIX") . "session";
-        //分布式数据库
-        $host = explode(',', C('DB_HOST'));
-        $port = explode(',', C('DB_PORT'));
-        $name = explode(',', C('DB_NAME'));
-        $user = explode(',', C('DB_USER'));
-        $pwd  = explode(',', C('DB_PWD'));
-        if (1 == C('DB_DEPLOY_TYPE')) {
-            //读写分离
-            if (C('DB_RW_SEPARATE')) {
-                $w = floor(mt_rand(0, C('DB_MASTER_NUM') - 1));
-                if (is_numeric(C('DB_SLAVE_NO'))) {
-//指定服务器读
-                    $r = C('DB_SLAVE_NO');
-                } else {
-                    $r = floor(mt_rand(C('DB_MASTER_NUM'), count($host) - 1));
-                }
-                //主数据库链接
-                $hander = mysql_connect(
-                    $host[$w] . (isset($port[$w]) ? ':' . $port[$w] : ':' . $port[0]),
-                    isset($user[$w]) ? $user[$w] : $user[0],
-                    isset($pwd[$w]) ? $pwd[$w] : $pwd[0]
-                );
-                $dbSel = mysql_select_db(
-                    isset($name[$w]) ? $name[$w] : $name[0]
-                    , $hander);
-                if (!$hander || !$dbSel) {
-                    return false;
-                }
-
-                $this->hander[0] = $hander;
-                //从数据库链接
-                $hander = mysql_connect(
-                    $host[$r] . (isset($port[$r]) ? ':' . $port[$r] : ':' . $port[0]),
-                    isset($user[$r]) ? $user[$r] : $user[0],
-                    isset($pwd[$r]) ? $pwd[$r] : $pwd[0]
-                );
-                $dbSel = mysql_select_db(
-                    isset($name[$r]) ? $name[$r] : $name[0]
-                    , $hander);
-                if (!$hander || !$dbSel) {
-                    return false;
-                }
-
-                $this->hander[1] = $hander;
-                return true;
-            }
-        }
-        //从数据库链接
-        $r      = floor(mt_rand(0, count($host) - 1));
-        $hander = mysql_connect(
-            $host[$r] . (isset($port[$r]) ? ':' . $port[$r] : ':' . $port[0]),
-            isset($user[$r]) ? $user[$r] : $user[0],
-            isset($pwd[$r]) ? $pwd[$r] : $pwd[0]
-        );
-        $dbSel = mysql_select_db(
-            isset($name[$r]) ? $name[$r] : $name[0]
-            , $hander);
-        if (!$hander || !$dbSel) {
-            return false;
-        }
-
-        $this->hander = $hander;
         return true;
     }
 
     /**
      * 关闭Session
      * @access public
+     * @return bool
      */
     public function close()
     {
-        if (is_array($this->hander)) {
-            $this->gc($this->lifeTime);
-            return (mysql_close($this->hander[0]) && mysql_close($this->hander[1]));
-        }
         $this->gc($this->lifeTime);
-        return mysql_close($this->hander);
+        return true;
     }
 
     /**
      * 读取Session
      * @access public
      * @param string $sessID
+     * @return string
      */
     public function read($sessID)
     {
-        $hander = is_array($this->hander) ? $this->hander[1] : $this->hander;
-        $res    = mysql_query('SELECT session_data AS data FROM ' . $this->sessionTable . " WHERE session_id = '$sessID'   AND session_expire >" . time(), $hander);
-        if ($res) {
-            $row = mysql_fetch_assoc($res);
-            return $row['data'];
+        $table  = $this->getTable();
+        $id     = $this->escape($sessID);
+        $expire = time();
+        try {
+            $result = $this->getDb()->query(
+                "SELECT session_data AS data FROM {$table} WHERE session_id = '{$id}' AND session_expire > {$expire}"
+            );
+            if (!empty($result) && isset($result[0]['data'])) {
+                return $result[0]['data'];
+            }
+        } catch (\Exception $e) {
+            // ignore
         }
         return "";
     }
@@ -147,18 +123,26 @@ class Db
      * 写入Session
      * @access public
      * @param string $sessID
-     * @param String $sessData
+     * @param string $sessData
+     * @return bool
      */
     public function write($sessID, $sessData)
     {
-        $hander   = is_array($this->hander) ? $this->hander[0] : $this->hander;
-        $expire   = time() + $this->lifeTime;
-        $sessData = addslashes($sessData);
-        mysql_query('REPLACE INTO  ' . $this->sessionTable . " (  session_id, session_expire, session_data)  VALUES( '$sessID', '$expire',  '$sessData')", $hander);
-        if (mysql_affected_rows($hander)) {
+        $db     = $this->getDb();
+        $table  = $this->getTable();
+        $id     = $this->escape($sessID);
+        $expire = time() + $this->lifeTime;
+        $data   = $this->escape($sessData);
+        try {
+            // 使用事务保证 DELETE+INSERT 的原子性（跨数据库兼容）
+            $db->startTrans();
+            $db->execute("DELETE FROM {$table} WHERE session_id = '{$id}'");
+            $db->execute("INSERT INTO {$table} (session_id, session_expire, session_data) VALUES ('{$id}', {$expire}, '{$data}')");
+            $db->commit();
             return true;
+        } catch (\Exception $e) {
+            $db->rollback();
         }
-
         return false;
     }
 
@@ -166,15 +150,18 @@ class Db
      * 删除Session
      * @access public
      * @param string $sessID
+     * @return bool
      */
     public function destroy($sessID)
     {
-        $hander = is_array($this->hander) ? $this->hander[0] : $this->hander;
-        mysql_query('DELETE FROM ' . $this->sessionTable . " WHERE session_id = '$sessID'", $hander);
-        if (mysql_affected_rows($hander)) {
+        $table = $this->getTable();
+        $id    = $this->escape($sessID);
+        try {
+            $this->getDb()->execute("DELETE FROM {$table} WHERE session_id = '{$id}'");
             return true;
+        } catch (\Exception $e) {
+            // ignore
         }
-
         return false;
     }
 
@@ -182,12 +169,17 @@ class Db
      * Session 垃圾回收
      * @access public
      * @param string $sessMaxLifeTime
+     * @return int
      */
     public function gc($sessMaxLifeTime)
     {
-        $hander = is_array($this->hander) ? $this->hander[0] : $this->hander;
-        mysql_query('DELETE FROM ' . $this->sessionTable . ' WHERE session_expire < ' . time(), $hander);
-        return mysql_affected_rows($hander);
+        $table  = $this->getTable();
+        $expire = time();
+        try {
+            return $this->getDb()->execute("DELETE FROM {$table} WHERE session_expire < {$expire}");
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
 }
