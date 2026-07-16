@@ -89,20 +89,20 @@ class Verify
      */
     public function check($code, $id = '')
     {
-        $key = $this->authcode($this->seKey) . $id;
+        $key = $this->authcode($this->config['seKey']) . $id;
         // 验证码不能为空
         $secode = session($key);
         if (empty($code) || empty($secode)) {
             return false;
         }
         // session 过期
-        if (NOW_TIME - $secode['verify_time'] > $this->expire) {
+        if (NOW_TIME - $secode['verify_time'] > $this->config['expire']) {
             session($key, null);
             return false;
         }
 
         if ($this->authcode(strtoupper($code)) == $secode['verify_code']) {
-            $this->reset && session($key, null);
+            $this->config['reset'] && session($key, null);
             return true;
         }
 
@@ -119,20 +119,24 @@ class Verify
     public function entry($id = '')
     {
         // 图片宽(px)
-        $this->imageW || $this->imageW = $this->length * $this->fontSize * 1.5 + $this->length * $this->fontSize / 2;
+        if (empty($this->config['imageW'])) {
+            $this->config['imageW'] = (int) ($this->config['length'] * $this->config['fontSize'] * 1.5 + $this->config['length'] * $this->config['fontSize'] / 2);
+        }
         // 图片高(px)
-        $this->imageH || $this->imageH = $this->fontSize * 2.5;
-        // 建立一幅 $this->imageW x $this->imageH 的图像
-        $this->_image = imagecreate($this->imageW, $this->imageH);
+        if (empty($this->config['imageH'])) {
+            $this->config['imageH'] = (int) ($this->config['fontSize'] * 2.5);
+        }
+        // 建立一幅 imageW x imageH 的图像
+        $this->_image = imagecreate((int) $this->config['imageW'], (int) $this->config['imageH']);
         // 设置背景
-        imagecolorallocate($this->_image, $this->bg[0], $this->bg[1], $this->bg[2]);
+        imagecolorallocate($this->_image, $this->config['bg'][0], $this->config['bg'][1], $this->config['bg'][2]);
 
         // 验证码字体随机颜色
         $this->_color = imagecolorallocate($this->_image, mt_rand(1, 150), mt_rand(1, 150), mt_rand(1, 150));
         // 验证码使用随机字体
-        $ttfPath = dirname(__FILE__) . '/Verify/' . ($this->useZh ? 'zhttfs' : 'ttfs') . '/';
+        $ttfPath = dirname(__FILE__) . '/Verify/' . ($this->config['useZh'] ? 'zhttfs' : 'ttfs') . '/';
 
-        if (empty($this->fontttf)) {
+        if (empty($this->config['fontttf'])) {
             $dir  = dir($ttfPath);
             $ttfs = array();
             while (false !== ($file = $dir->read())) {
@@ -141,19 +145,19 @@ class Verify
                 }
             }
             $dir->close();
-            $this->fontttf = $ttfs[array_rand($ttfs)];
+            $this->config['fontttf'] = $ttfs[array_rand($ttfs)];
         }
-        $this->fontttf = $ttfPath . $this->fontttf;
+        $this->config['fontttf'] = $ttfPath . $this->config['fontttf'];
 
-        if ($this->useImgBg) {
+        if ($this->config['useImgBg']) {
             $this->_background();
         }
 
-        if ($this->useNoise) {
+        if ($this->config['useNoise']) {
             // 绘杂点
             $this->_writeNoise();
         }
-        if ($this->useCurve) {
+        if ($this->config['useCurve']) {
             // 绘干扰线
             $this->_writeCurve();
         }
@@ -161,22 +165,22 @@ class Verify
         // 绘验证码
         $code   = array(); // 验证码
         $codeNX = 0; // 验证码第N个字符的左边距
-        if ($this->useZh) {
+        if ($this->config['useZh']) {
             // 中文验证码
-            for ($i = 0; $i < $this->length; $i++) {
-                $code[$i] = iconv_substr($this->zhSet, floor(mt_rand(0, mb_strlen($this->zhSet, 'utf-8') - 1)), 1, 'utf-8');
-                imagettftext($this->_image, $this->fontSize, mt_rand(-40, 40), $this->fontSize * ($i + 1) * 1.5, $this->fontSize + mt_rand(10, 20), $this->_color, $this->fontttf, $code[$i]);
+            for ($i = 0; $i < $this->config['length']; $i++) {
+                $code[$i] = iconv_substr($this->config['zhSet'], floor(mt_rand(0, mb_strlen($this->config['zhSet'], 'utf-8') - 1)), 1, 'utf-8');
+                imagettftext($this->_image, (int) $this->config['fontSize'], mt_rand(-40, 40), (int) ($this->config['fontSize'] * ($i + 1) * 1.5), (int) ($this->config['fontSize'] + mt_rand(10, 20)), $this->_color, $this->config['fontttf'], $code[$i]);
             }
         } else {
-            for ($i = 0; $i < $this->length; $i++) {
-                $code[$i] = $this->codeSet[mt_rand(0, strlen($this->codeSet) - 1)];
-                $codeNX += mt_rand($this->fontSize * 1.2, $this->fontSize * 1.6);
-                imagettftext($this->_image, $this->fontSize, mt_rand(-40, 40), $codeNX, $this->fontSize * 1.6, $this->_color, $this->fontttf, $code[$i]);
+            for ($i = 0; $i < $this->config['length']; $i++) {
+                $code[$i] = $this->config['codeSet'][mt_rand(0, strlen($this->config['codeSet']) - 1)];
+                $codeNX += mt_rand((int) ($this->config['fontSize'] * 1.2), (int) ($this->config['fontSize'] * 1.6));
+                imagettftext($this->_image, (int) $this->config['fontSize'], mt_rand(-40, 40), (int) $codeNX, (int) ($this->config['fontSize'] * 1.6), $this->_color, $this->config['fontttf'], $code[$i]);
             }
         }
 
         // 保存验证码
-        $key                   = $this->authcode($this->seKey);
+        $key                   = $this->authcode($this->config['seKey']);
         $code                  = $this->authcode(strtoupper(implode('', $code)));
         $secode                = array();
         $secode['verify_code'] = $code; // 把校验码保存到session
@@ -210,41 +214,41 @@ class Verify
         $px = $py = 0;
 
         // 曲线前部分
-        $A = mt_rand(1, $this->imageH / 2); // 振幅
-        $b = mt_rand(-$this->imageH / 4, $this->imageH / 4); // Y轴方向偏移量
-        $f = mt_rand(-$this->imageH / 4, $this->imageH / 4); // X轴方向偏移量
-        $T = mt_rand($this->imageH, $this->imageW * 2); // 周期
+        $A = mt_rand(1, (int) ($this->config['imageH'] / 2)); // 振幅
+        $b = mt_rand(-(int) ($this->config['imageH'] / 4), (int) ($this->config['imageH'] / 4)); // Y轴方向偏移量
+        $f = mt_rand(-(int) ($this->config['imageH'] / 4), (int) ($this->config['imageH'] / 4)); // X轴方向偏移量
+        $T = mt_rand((int) $this->config['imageH'], (int) ($this->config['imageW'] * 2)); // 周期
         $w = (2 * M_PI) / $T;
 
         $px1 = 0; // 曲线横坐标起始位置
-        $px2 = mt_rand($this->imageW / 2, $this->imageW * 0.8); // 曲线横坐标结束位置
+        $px2 = mt_rand((int) ($this->config['imageW'] / 2), (int) ($this->config['imageW'] * 0.8)); // 曲线横坐标结束位置
 
         for ($px = $px1; $px <= $px2; $px = $px + 1) {
             if (0 != $w) {
-                $py = $A * sin($w * $px + $f) + $b + $this->imageH / 2; // y = Asin(ωx+φ) + b
-                $i  = (int) ($this->fontSize / 5);
+                $py = (int) ($A * sin($w * $px + $f) + $b + $this->config['imageH'] / 2); // y = Asin(ωx+φ) + b
+                $i  = (int) ($this->config['fontSize'] / 5);
                 while ($i > 0) {
-                    imagesetpixel($this->_image, $px + $i, $py + $i, $this->_color); // 这里(while)循环画像素点比imagettftext和imagestring用字体大小一次画出（不用这while循环）性能要好很多
+                    imagesetpixel($this->_image, (int) ($px + $i), (int) ($py + $i), $this->_color); // 这里(while)循环画像素点比imagettftext和imagestring用字体大小一次画出（不用这while循环）性能要好很多
                     $i--;
                 }
             }
         }
 
         // 曲线后部分
-        $A   = mt_rand(1, $this->imageH / 2); // 振幅
-        $f   = mt_rand(-$this->imageH / 4, $this->imageH / 4); // X轴方向偏移量
-        $T   = mt_rand($this->imageH, $this->imageW * 2); // 周期
+        $A   = mt_rand(1, (int) ($this->config['imageH'] / 2)); // 振幅
+        $f   = mt_rand(-(int) ($this->config['imageH'] / 4), (int) ($this->config['imageH'] / 4)); // X轴方向偏移量
+        $T   = mt_rand((int) $this->config['imageH'], (int) ($this->config['imageW'] * 2)); // 周期
         $w   = (2 * M_PI) / $T;
-        $b   = $py - $A * sin($w * $px + $f) - $this->imageH / 2;
+        $b   = $py - $A * sin($w * $px + $f) - $this->config['imageH'] / 2;
         $px1 = $px2;
-        $px2 = $this->imageW;
+        $px2 = (int) $this->config['imageW'];
 
         for ($px = $px1; $px <= $px2; $px = $px + 1) {
             if (0 != $w) {
-                $py = $A * sin($w * $px + $f) + $b + $this->imageH / 2; // y = Asin(ωx+φ) + b
-                $i  = (int) ($this->fontSize / 5);
+                $py = (int) ($A * sin($w * $px + $f) + $b + $this->config['imageH'] / 2); // y = Asin(ωx+φ) + b
+                $i  = (int) ($this->config['fontSize'] / 5);
                 while ($i > 0) {
-                    imagesetpixel($this->_image, $px + $i, $py + $i, $this->_color);
+                    imagesetpixel($this->_image, (int) ($px + $i), (int) ($py + $i), $this->_color);
                     $i--;
                 }
             }
@@ -263,7 +267,7 @@ class Verify
             $noiseColor = imagecolorallocate($this->_image, mt_rand(150, 225), mt_rand(150, 225), mt_rand(150, 225));
             for ($j = 0; $j < 5; $j++) {
                 // 绘杂点
-                imagestring($this->_image, 5, mt_rand(-10, $this->imageW), mt_rand(-10, $this->imageH), $codeSet[mt_rand(0, 29)], $noiseColor);
+                imagestring($this->_image, 5, mt_rand(-10, (int) $this->config['imageW']), mt_rand(-10, (int) $this->config['imageH']), $codeSet[mt_rand(0, 29)], $noiseColor);
             }
         }
     }
@@ -290,14 +294,14 @@ class Verify
         list($width, $height) = @getimagesize($gb);
         // Resample
         $bgImage = @imagecreatefromjpeg($gb);
-        @imagecopyresampled($this->_image, $bgImage, 0, 0, 0, 0, $this->imageW, $this->imageH, $width, $height);
+        @imagecopyresampled($this->_image, $bgImage, 0, 0, 0, 0, (int) $this->config['imageW'], (int) $this->config['imageH'], $width, $height);
         @imagedestroy($bgImage);
     }
 
     /* 加密验证码 */
     private function authcode($str)
     {
-        $key = substr(md5($this->seKey), 5, 8);
+        $key = substr(md5($this->config['seKey']), 5, 8);
         $str = substr(md5($str), 8, 10);
         return md5($key . $str);
     }
