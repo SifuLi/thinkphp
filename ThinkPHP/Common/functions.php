@@ -1799,8 +1799,8 @@ function think_filter(&$value)
 {
     // TODO 其他安全过滤
 
-    // 过滤查询特殊字符
-    if (preg_match('/^(EXP|NEQ|GT|EGT|LT|ELT|OR|XOR|LIKE|NOTLIKE|NOT BETWEEN|NOTBETWEEN|BETWEEN|NOTIN|NOT IN|IN|BIND)$/i', $value)) {
+    // 过滤查询特殊字符（PHP 8.1+ 不允许 preg_match 接收 null）
+    if (is_string($value) && preg_match('/^(EXP|NEQ|GT|EGT|LT|ELT|OR|XOR|LIKE|NOTLIKE|NOT BETWEEN|NOTBETWEEN|BETWEEN|NOTIN|NOT IN|IN|BIND)$/i', $value)) {
         $value .= ' ';
     }
 }
