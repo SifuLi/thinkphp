@@ -251,7 +251,7 @@ class Think
             $error['line'] = $e->getLine();
         }
         $error['trace'] = $e->getTraceAsString();
-        Log::record($error['message'], Log::ERR);
+        Log::record($error['message'].' 在 '.$error['file'].' 第 '.$error['line'].' 行'."\nTrace:\n".$error['trace'], Log::ERR);
         // 发送404信息
         header('HTTP/1.1 404 Not Found');
         header('Status:404 Not Found');
