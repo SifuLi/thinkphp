@@ -21,7 +21,7 @@ namespace Think\Session\Driver;
  *      UNIQUE KEY `session_id` (`session_id`)
  *    );
  */
-class Mysqli
+class Mysqli implements \SessionHandlerInterface
 {
 
     /**
@@ -45,7 +45,7 @@ class Mysqli
      * @param string $savePath
      * @param mixed $sessName
      */
-    public function open($savePath, $sessName)
+    public function open($savePath, $sessName): bool
     {
         $this->lifeTime     = C('SESSION_EXPIRE') ? C('SESSION_EXPIRE') : ini_get('session.gc_maxlifetime');
         $this->sessionTable = C('SESSION_TABLE') ? C('SESSION_TABLE') : C("DB_PREFIX") . "session";
@@ -121,7 +121,7 @@ class Mysqli
      * 关闭Session
      * @access public
      */
-    public function close()
+    public function close(): bool
     {
         if (is_array($this->hander)) {
             $this->gc($this->lifeTime);
@@ -136,7 +136,7 @@ class Mysqli
      * @access public
      * @param string $sessID
      */
-    public function read($sessID)
+    public function read($sessID): string|false
     {
         $hander = is_array($this->hander) ? $this->hander[1] : $this->hander;
         $res    = mysqli_query($hander, "SELECT session_data AS data FROM " . $this->sessionTable . " WHERE session_id = '$sessID'   AND session_expire >" . time());
@@ -153,7 +153,7 @@ class Mysqli
      * @param string $sessID
      * @param String $sessData
      */
-    public function write($sessID, $sessData)
+    public function write($sessID, $sessData): bool
     {
         $hander = is_array($this->hander) ? $this->hander[0] : $this->hander;
         $expire = time() + $this->lifeTime;
@@ -170,7 +170,7 @@ class Mysqli
      * @access public
      * @param string $sessID
      */
-    public function destroy($sessID)
+    public function destroy($sessID): bool
     {
         $hander = is_array($this->hander) ? $this->hander[0] : $this->hander;
         mysqli_query($hander, "DELETE FROM " . $this->sessionTable . " WHERE session_id = '$sessID'");
@@ -186,7 +186,7 @@ class Mysqli
      * @access public
      * @param string $sessMaxLifeTime
      */
-    public function gc($sessMaxLifeTime)
+    public function gc($sessMaxLifeTime): int|false
     {
         $hander = is_array($this->hander) ? $this->hander[0] : $this->hander;
         mysqli_query($hander, "DELETE FROM " . $this->sessionTable . " WHERE session_expire < " . time());

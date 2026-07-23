@@ -25,7 +25,7 @@ use Think\Db as ThinkDb;
  *      UNIQUE KEY `session_id` (`session_id`)
  *    );
  */
-class Db
+class Db implements \SessionHandlerInterface
 {
 
     /**
@@ -77,7 +77,7 @@ class Db
      * @param mixed $sessName
      * @return bool
      */
-    public function open($savePath, $sessName)
+    public function open($savePath, $sessName): bool
     {
         $this->lifeTime     = C('SESSION_EXPIRE') ? C('SESSION_EXPIRE') : ini_get('session.gc_maxlifetime');
         $this->sessionTable = C('SESSION_TABLE') ? C('SESSION_TABLE') : C("DB_PREFIX") . "session";
@@ -89,7 +89,7 @@ class Db
      * @access public
      * @return bool
      */
-    public function close()
+    public function close(): bool
     {
         $this->gc($this->lifeTime);
         return true;
@@ -101,7 +101,7 @@ class Db
      * @param string $sessID
      * @return string
      */
-    public function read($sessID)
+    public function read($sessID): string|false
     {
         $table  = $this->getTable();
         $id     = $this->escape($sessID);
@@ -126,7 +126,7 @@ class Db
      * @param string $sessData
      * @return bool
      */
-    public function write($sessID, $sessData)
+    public function write($sessID, $sessData): bool
     {
         $db     = $this->getDb();
         $table  = $this->getTable();
@@ -152,7 +152,7 @@ class Db
      * @param string $sessID
      * @return bool
      */
-    public function destroy($sessID)
+    public function destroy($sessID): bool
     {
         $table = $this->getTable();
         $id    = $this->escape($sessID);
@@ -171,7 +171,7 @@ class Db
      * @param string $sessMaxLifeTime
      * @return int
      */
-    public function gc($sessMaxLifeTime)
+    public function gc($sessMaxLifeTime): int|false
     {
         $table  = $this->getTable();
         $expire = time();

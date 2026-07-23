@@ -1,7 +1,7 @@
 <?php
 namespace Think\Session\Driver;
 
-class Memcache
+class Memcache implements \SessionHandlerInterface
 {
     protected $lifeTime    = 3600;
     protected $sessionName = '';
@@ -13,7 +13,7 @@ class Memcache
      * @param string $savePath
      * @param mixed $sessName
      */
-    public function open($savePath, $sessName)
+    public function open($savePath, $sessName): bool
     {
         $this->lifeTime = C('SESSION_EXPIRE') ? C('SESSION_EXPIRE') : $this->lifeTime;
         // $this->sessionName  = $sessName;
@@ -35,7 +35,7 @@ class Memcache
      * 关闭Session
      * @access public
      */
-    public function close()
+    public function close(): bool
     {
         $this->gc(ini_get('session.gc_maxlifetime'));
         $this->handle->close();
@@ -48,7 +48,7 @@ class Memcache
      * @access public
      * @param string $sessID
      */
-    public function read($sessID)
+    public function read($sessID): string|false
     {
         return $this->handle->get($this->sessionName . $sessID);
     }
@@ -59,7 +59,7 @@ class Memcache
      * @param string $sessID
      * @param String $sessData
      */
-    public function write($sessID, $sessData)
+    public function write($sessID, $sessData): bool
     {
         return $this->handle->set($this->sessionName . $sessID, $sessData, 0, $this->lifeTime);
     }
@@ -69,7 +69,7 @@ class Memcache
      * @access public
      * @param string $sessID
      */
-    public function destroy($sessID)
+    public function destroy($sessID): bool
     {
         return $this->handle->delete($this->sessionName . $sessID);
     }
@@ -79,8 +79,8 @@ class Memcache
      * @access public
      * @param string $sessMaxLifeTime
      */
-    public function gc($sessMaxLifeTime)
+    public function gc(int $sessMaxLifeTime): int|false
     {
-        return true;
+        return 0;
     }
 }

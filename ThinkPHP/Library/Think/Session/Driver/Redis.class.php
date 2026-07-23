@@ -1,7 +1,7 @@
 <?php
 namespace Think\Session\Driver;
 
-class Redis
+class Redis implements \SessionHandlerInterface
 {
     protected $lifeTime    = 3600;
     protected $sessionName = '';
@@ -21,7 +21,7 @@ class Redis
      * @param string $savePath
      * @param mixed $sessName
      */
-    public function open($savePath, $sessName)
+    public function open($savePath, $sessName): bool
     {
         $this->lifeTime    = C('SESSION_EXPIRE') ? C('SESSION_EXPIRE') : $this->lifeTime;
         $this->sessionName = 'PHPREDIS_SESSION:' . $sessName . ($sessName ? ':' : '');
@@ -51,7 +51,7 @@ class Redis
      * 关闭Session
      * @access public
      */
-    public function close()
+    public function close(): bool
     {
         $this->gc(ini_get('session.gc_maxlifetime'));
         $this->handle->close();
@@ -64,7 +64,7 @@ class Redis
      * @access public
      * @param string $sessID
      */
-    public function read($sessID)
+    public function read($sessID): string|false
     {
         $data = $this->handle->get($this->sessionName . $sessID);
         return $data ?: '';
@@ -76,7 +76,7 @@ class Redis
      * @param string $sessID
      * @param String $sessData
      */
-    public function write($sessID, $sessData)
+    public function write($sessID, $sessData): bool
     {
         if ($this->lifeTime > 0) {
             return $this->handle->setex($this->sessionName . $sessID, $this->lifeTime, $sessData);
@@ -90,7 +90,7 @@ class Redis
      * @access public
      * @param string $sessID
      */
-    public function destroy($sessID)
+    public function destroy($sessID): bool
     {
         return $this->handle->del($this->sessionName . $sessID) >= 0;
     }
@@ -100,7 +100,7 @@ class Redis
      * @access public
      * @param string $sessMaxLifeTime
      */
-    public function gc($sessMaxLifeTime)
+    public function gc(int $sessMaxLifeTime): int|false
     {
         return true;
     }
