@@ -343,7 +343,7 @@ function I($name, $default = '', $filter = null, $datas = null)
             break;
         case 'server':$input = &$_SERVER;
             break;
-        case 'globals':$input = &$GLOBALS;
+        case 'globals':$input = $GLOBALS;
             break;
         case 'data':$input = &$datas;
             break;
@@ -699,6 +699,7 @@ function parse_res_name($name, $layer)
  */
 function controller($name)
 {
+    $layer = C('DEFAULT_C_LAYER');
     $class = MODULE_NAME . '\\Controller';
     $array = explode('/', $name);
     foreach ($array as $name) {

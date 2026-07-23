@@ -276,7 +276,7 @@ function I($name, $default = '', $filter = null, $datas = null)
             break;
         case 'server':$input = &$_SERVER;
             break;
-        case 'globals':$input = &$GLOBALS;
+        case 'globals':$input = $GLOBALS;
             break;
         case 'data':$input = &$datas;
             break;
