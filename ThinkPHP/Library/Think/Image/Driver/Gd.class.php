@@ -209,6 +209,14 @@ class Gd
         empty($width) && $width   = $w;
         empty($height) && $height = $h;
 
+        // 确保所有参数为整数，避免PHP 8.1+ float转int弃用警告
+        $w      = intval($w);
+        $h      = intval($h);
+        $x      = intval($x);
+        $y      = intval($y);
+        $width  = intval($width);
+        $height = intval($height);
+
         do {
             //创建新图像
             $img = imagecreatetruecolor($width, $height);
@@ -314,10 +322,10 @@ class Gd
                 }
 
                 //设置缩略图的坐标及宽度和高度
-                $neww = $w * $scale;
-                $newh = $h * $scale;
-                $posx = ($width - $w * $scale) / 2;
-                $posy = ($height - $h * $scale) / 2;
+                $neww = intval($w * $scale);
+                $newh = intval($h * $scale);
+                $posx = intval(($width - $w * $scale) / 2);
+                $posy = intval(($height - $h * $scale) / 2);
                 do {
                     //创建新图像
                     $img = imagecreatetruecolor($width, $height);
